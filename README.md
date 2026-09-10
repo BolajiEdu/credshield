@@ -1,16 +1,82 @@
-# React + Vite
+# CredShield
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Credential exposure intelligence for banks, fintechs and SMEs.
 
-Currently, two official plugins are available:
+**Live:** https://credshield.ultenterprise.com
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Most breaches begin with a login that already works. By the time an
+organisation discovers its credentials are circulating, they have often
+been on sale for months — the average breach involving stolen credentials
+takes 292 days to identify and contain.
 
-## React Compiler
+CredShield is built around that gap. It answers three questions: what has
+leaked, how long it has been available to buy, and what to do about it.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## What it does
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+**Exposure lookup**
+Enter an email address or a company domain and see every record held for
+it — the source, the data classes exposed, how the password was stored and
+the realistic time to crack that algorithm, whether the listing is still
+live, and how many days it has been circulating.
+
+**Remediation planning**
+Generates a prioritised plan from what actually leaked rather than a
+template. A leaked session token produces a key-rotation task; weak hashes
+produce a KDF migration task. Each action carries an owner, a deadline and
+numbered technical steps.
+
+**Regulatory mapping**
+Maps findings to the obligations they trigger — UK GDPR Articles 33 and 34,
+DORA Article 19, NIS2 Article 23, PCI-DSS Requirements 3.3 and 8.3.6, and
+FCA SYSC 13 — with the reporting clock and the evidence to retain.
+
+**Institution monitoring**
+Portfolio view across 20 financial institutions in the UK, US, EU and
+Africa, filterable by region, severity and date range, with a live
+threat-activity timeline.
+
+**Reporting**
+Exports a standalone client-ready report covering the record table, the
+full remediation plan and the regulatory mapping.
+
+---
+
+## Design principles
+
+Passwords are never displayed, only the storage algorithm and the
+structural pattern. A tool that echoes back plaintext credentials becomes a
+liability the moment it is itself breached.
+
+Monitoring reads only publicly circulating breach data, never an
+organisation's internal systems, and only for domains whose ownership has
+been verified.
+
+---
+
+## Stack
+
+React · Vite · deployed on Vercel. No runtime dependencies beyond React;
+all visualisation is hand-built SVG.
+
+## Local development
+
+```bash
+npm install
+npm run dev
+```
+
+## Status
+
+Demonstration build. Exposure records are generated locally from the input
+so the interface can be evaluated without handling real breach data.
+Integration with live breach corpora is documented in the Integrations
+view.
+
+---
+
+Built by [Bolaji Uthman Edu](https://github.com/BolajiEdu) —
+[UltEnterprise](https://ultenterprise.com), independent penetration testing
+and red team consultancy.
