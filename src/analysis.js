@@ -132,10 +132,12 @@ export function remediation(breaches) {
     });
   }
   if (weakStore.length) {
+    const algos = [...new Set(weakStore.map(b => storageOf(b).algo))].join(', ');
     push({
-      priority: 'P1', window: 'Within 30 days', hours: 720, owner: 'Engineering', sev: 'High',
-      title: 'Review your own password storage',
-      why: `These breaches show what weak storage costs. Check your own systems are not using the same algorithms.`,
+      priority: 'P2', window: 'Within 30 days', hours: 720, owner: 'Engineering', sev: 'Medium',
+      advisory: true,
+      title: 'Advisory — verify your own password storage',
+      why: `Not a finding against this subject. The breaches above stored passwords using ${algos}, which is why the exposure is as severe as it is. Treat this as a prompt to confirm your own systems do not use the same approach.`,
       steps: [
         'Adopt Argon2id, or bcrypt at cost 12 or above, for all new and changed passwords.',
         'Rehash transparently on next successful login.',
@@ -200,8 +202,8 @@ export function compliance(breaches) {
     out.push({
       framework: 'UK GDPR', ref: 'Article 34', sev: 'High', hours: 72,
       clock: 'Without undue delay',
-      title: 'Consider telling affected individuals directly',
-      detail: 'Credentials or identity data were exposed, which generally meets the high-risk threshold at which individuals must be informed directly rather than only the regulator.',
+      title: 'Assess whether affected individuals must be told directly',
+      detail: 'Where a breach is likely to result in a high risk to individuals, they must be informed directly and not only the regulator. Exposure of credentials or identity data will often meet that threshold, but it remains an assessment for the controller to make and record.',
       evidence: 'Notification copy, distribution list, send timestamps',
     });
   }

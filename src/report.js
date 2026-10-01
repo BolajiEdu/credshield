@@ -206,7 +206,7 @@ ordered by how quickly each one closes real risk.</p>
 ${tasks.map(t => `<div class="task ${t.priority.toLowerCase()}">
   <h3>${esc(t.priority)} &nbsp;·&nbsp; ${esc(t.title)}</h3>
   <div><span class="tag">${esc(t.window)}</span><span class="tag">Owner: ${esc(t.owner)}</span>
-    <span class="tag mono">${esc(t.id)}</span></div>
+    <span class="tag mono">${esc(t.id)}</span>${t.advisory ? '<span class="tag" style="border-color:#B9C2D0;color:#6E7B8F">Advisory</span>' : ""}</div>
   <p class="why">${esc(t.why)}</p>
   <ol>${t.steps.map(x => `<li>${esc(x)}</li>`).join("")}</ol>
 </div>`).join("")}
