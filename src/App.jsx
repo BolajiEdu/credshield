@@ -348,9 +348,19 @@ function Compliance({ items }) {
 // ─── report export ───────────────────────────────────────────
 function ReportBar({ subject, kind, breaches, tasks, compliance, windowLabel, excluded }) {
   const [open, setOpen] = useState(false);
-  const [meta, setMeta] = useState({ client: "", engagement: "", tester: "Bolaji Uthman Edu" });
+  const [meta, setMeta] = useState({ client: "", engagement: "", tester: "" });
   const [warn, setWarn] = useState("");
-  const payload = { subject, kind, breaches, tasks, compliance, meta: { ...meta, windowLabel, excluded } };
+
+  // Practitioner mode. Signed, client-branded reports are only produced when the
+  // app is opened with ?mode=pro. A self-service visitor gets an unsigned report
+  // that states plainly nobody reviewed it.
+  const pro = useMemo(() => {
+    try { return new URLSearchParams(window.location.search).get("mode") === "pro"; }
+    catch { return false; }
+  }, []);
+
+  const payload = { subject, kind, breaches, tasks, compliance,
+    meta: { ...meta, pro, windowLabel, excluded } };
 
   return (
     <div className="panel" style={{ marginBottom: 16 }}>
@@ -359,13 +369,15 @@ function ReportBar({ subject, kind, breaches, tasks, compliance, windowLabel, ex
         <button className="btn btn-g" onClick={() => setWarn(printReport(payload) ? "" : "Pop-up blocked — download the report, then print that file to PDF.")}>
           Save as PDF
         </button>
-        <button className="btn btn-g" onClick={() => setOpen(!open)}>
-          {open ? "Hide client details" : "Add client details"}
-        </button>
+        {pro && (
+          <button className="btn btn-g" onClick={() => setOpen(!open)}>
+            {open ? "Hide client details" : "Add client details"}
+          </button>
+        )}
       </div>
       {warn && <p className="t-xs" style={{ color: "var(--s3)", margin: "10px 0 0" }}>{warn}</p>}
 
-      {open && (
+      {pro && open && (
         <div style={{ marginTop: 14, display: "grid", gap: 10 }}>
           <p className="t-xs mute" style={{ margin: 0 }}>
             Optional. These appear on the report cover page.
@@ -381,8 +393,9 @@ function ReportBar({ subject, kind, breaches, tasks, compliance, windowLabel, ex
       )}
 
       <p className="t-xs mute" style={{ margin: "12px 0 0", maxWidth: 620 }}>
-        The report is framed as a passive OSINT assessment, not a penetration test. It states plainly
-        that no client system was accessed.
+        {pro
+          ? "Practitioner mode. The report will carry the assessor and client details entered above."
+          : "The report is unsigned and states that no practitioner reviewed it. It is framed as a passive OSINT assessment, not a penetration test."}
       </p>
     </div>
   );
