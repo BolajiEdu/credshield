@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import {
-  classSeverity, storageOf, daysSince, stripHtml,
+  classSeverity, breachSeverity, storageOf, daysSince, stripHtml,
   score, grade, remediation, compliance,
 } from "./analysis.js";
 import { downloadReport, printReport } from "./report.js";
@@ -152,8 +152,7 @@ function Dial({ s, size = 112 }) {
 // ─── breach record card ──────────────────────────────────────
 function BreachCard({ b, open, onToggle }) {
   const classes = b.DataClasses || [];
-  const worst = Math.max(...classes.map(classSeverity), 1);
-  const lvl = sevOf(worst);
+  const lvl = sevOf(breachSeverity(b));
   const c = tone(lvl);
   const store = storageOf(b);
   const age = daysSince(b.BreachDate);

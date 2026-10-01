@@ -40,6 +40,22 @@ export function storageOf(breach) {
   return { algo: 'Not stated', crack: 'Unknown', risk: 3 };
 }
 
+// Severity of a single breach: worst data class present, moderated by how the
+// passwords were actually stored. A bcrypt breach and a plaintext breach are
+// not the same finding, even though both expose "Passwords".
+export function breachSeverity(b) {
+  const classes = b.DataClasses || [];
+  let worst = Math.max(...classes.map(classSeverity), 1);
+  const st = storageOf(b);
+  if (st && classes.includes('Passwords')) {
+    // Strong storage pulls a password finding down; weak storage keeps it at the top.
+    if (st.risk <= 2) worst = Math.min(worst, 3);
+    else if (st.risk === 3) worst = Math.min(worst, 4);
+  }
+  if (b.IsStealerLog) worst = 5;
+  return worst;
+}
+
 export const daysSince = iso =>
   Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86400000));
 

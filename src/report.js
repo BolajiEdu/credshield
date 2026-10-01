@@ -1,4 +1,4 @@
-import { classSeverity, storageOf, daysSince, stripHtml, score, grade } from "./analysis.js";
+import { classSeverity, breachSeverity, storageOf, daysSince, stripHtml, score, grade } from "./analysis.js";
 
 // ══════════════════════════════════════════════════════════════
 // Report generator.
@@ -160,7 +160,7 @@ future listing is identified promptly rather than retrospectively.</p>
   </tr></thead>
   <tbody>
   ${breaches.slice().sort((a, b) => new Date(b.BreachDate) - new Date(a.BreachDate)).map(b => {
-    const worst = sevOf(Math.max(...(b.DataClasses || []).map(classSeverity), 1));
+    const worst = sevOf(breachSeverity(b));
     return `<tr>
       <td><span class="sev" style="background:${HEX[worst]}"></span><strong>${esc(b.Title)}</strong>
         ${b.IsStealerLog ? '<br><span class="sub">Infostealer log</span>' : ""}
