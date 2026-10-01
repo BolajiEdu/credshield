@@ -3,6 +3,7 @@ import {
   classSeverity, storageOf, daysSince, stripHtml,
   score, grade, remediation, compliance,
 } from "./analysis.js";
+import { downloadReport, printReport } from "./report.js";
 
 // ══════════════════════════════════════════════════════════════
 // CredShield v2 — real data.
@@ -336,6 +337,49 @@ function Compliance({ items }) {
   );
 }
 
+// ─── report export ───────────────────────────────────────────
+function ReportBar({ subject, kind, breaches, tasks, compliance }) {
+  const [open, setOpen] = useState(false);
+  const [meta, setMeta] = useState({ client: "", engagement: "", tester: "Bolaji Uthman Edu" });
+  const [warn, setWarn] = useState("");
+  const payload = { subject, kind, breaches, tasks, compliance, meta };
+
+  return (
+    <div className="panel" style={{ marginBottom: 16 }}>
+      <div className="row stack-sm" style={{ gap: 10, flexWrap: "wrap" }}>
+        <button className="btn btn-p" onClick={() => downloadReport(payload)}>↓ Download report</button>
+        <button className="btn btn-g" onClick={() => setWarn(printReport(payload) ? "" : "Pop-up blocked — download the report, then print that file to PDF.")}>
+          Save as PDF
+        </button>
+        <button className="btn btn-g" onClick={() => setOpen(!open)}>
+          {open ? "Hide client details" : "Add client details"}
+        </button>
+      </div>
+      {warn && <p className="t-xs" style={{ color: "var(--s3)", margin: "10px 0 0" }}>{warn}</p>}
+
+      {open && (
+        <div style={{ marginTop: 14, display: "grid", gap: 10 }}>
+          <p className="t-xs mute" style={{ margin: 0 }}>
+            Optional. These appear on the report cover page.
+          </p>
+          {[["client", "Client name"], ["engagement", "Engagement reference"], ["tester", "Assessed by"]].map(([k, label]) => (
+            <div key={k}>
+              <label className="t-xs dim" htmlFor={`m-${k}`} style={{ display: "block", marginBottom: 4 }}>{label}</label>
+              <input id={`m-${k}`} className="field" value={meta[k]}
+                onChange={e => setMeta(m => ({ ...m, [k]: e.target.value }))} />
+            </div>
+          ))}
+        </div>
+      )}
+
+      <p className="t-xs mute" style={{ margin: "12px 0 0", maxWidth: 620 }}>
+        The report is framed as a passive OSINT assessment, not a penetration test. It states plainly
+        that no client system was accessed.
+      </p>
+    </div>
+  );
+}
+
 // ─── results ─────────────────────────────────────────────────
 function Results({ subject, kind, breaches }) {
   const [tab, setTab] = useState("overview");
@@ -403,6 +447,8 @@ function Results({ subject, kind, breaches }) {
           </div>
         </div>
       </div>
+
+      <ReportBar subject={subject} kind={kind} breaches={breaches} tasks={tasks} compliance={comp} />
 
       <div className="tabs" role="tablist">
         {[["overview", "What was exposed"], ["records", `Breaches (${breaches.length})`],
