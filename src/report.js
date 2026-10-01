@@ -101,6 +101,9 @@ ol{margin:8px 0 0 18px;padding:0}li{margin-bottom:4px;font-size:12.5px}
     <tr><td class="k">Assessed by</td><td>${esc(tester)}</td></tr>
     <tr><td class="k">Date of assessment</td><td>${generated.toLocaleDateString("en-GB", { dateStyle: "long" })}</td></tr>
     <tr><td class="k">Reference</td><td class="mono">${ref}</td></tr>
+    <tr><td class="k">Finding window</td><td>${esc(meta.windowLabel || "All time")}${
+      meta.excluded ? ` &nbsp;<span class="sub">(${meta.excluded} older finding${meta.excluded === 1 ? "" : "s"} excluded)</span>` : ""
+    }</td></tr>
     <tr><td class="k">Classification</td><td>Confidential — client use only</td></tr>
   </table>
 </div>
@@ -236,6 +239,7 @@ starting point for assessment, not legal advice. Confirm applicability with your
   <li>Domain search returns breaches recorded against the organisation. Enumerating individual staff accounts requires verified ownership of the domain and is performed separately, with written authorisation.</li>
   <li>No password values were retrieved, viewed or stored at any point. Storage methods are read from breach disclosures, not from the data itself.</li>
   <li>This assessment reflects a single point in time. Exposure changes as new breaches are catalogued.</li>
+  ${meta.excluded ? `<li>This report covers the window stated on the cover page. ${meta.excluded} finding${meta.excluded === 1 ? " falls" : "s fall"} outside it and ${meta.excluded === 1 ? "is" : "are"} not included above. Older exposure remains relevant: a credential that leaked years ago has had longer to circulate, not less time.</li>` : ""}
 </ul>
 
 <div class="foot">

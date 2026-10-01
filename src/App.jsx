@@ -93,6 +93,14 @@ const tone = s => `var(--${SEV[s]?.v || "s4"})`;
 const sevOf = n => n >= 5 ? "Critical" : n >= 4 ? "High" : n >= 3 ? "Medium" : "Low";
 const fmt = n => n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${(n / 1e3).toFixed(0)}k` : String(n);
 
+const WINDOWS = [
+  { id: "all", label: "All time",       days: Infinity },
+  { id: "5y",  label: "Last 5 years",   days: 1825 },
+  { id: "3y",  label: "Last 3 years",   days: 1095 },
+  { id: "1y",  label: "Last 12 months", days: 365 },
+];
+const RECENT_DAYS = 730;
+
 const Chip = ({ children, c = "var(--dim)" }) => (
   <span className="chip" style={{ color: c, borderColor: c + "4D", background: c + "14" }}>{children}</span>
 );
@@ -158,6 +166,7 @@ function BreachCard({ b, open, onToggle }) {
           <div style={{ flex: 1, minWidth: 0 }}>
             <div className="row" style={{ gap: 8, flexWrap: "wrap", marginBottom: 5 }}>
               <span className="t-md" style={{ fontWeight: 600 }}>{b.Title}</span>
+              {age <= RECENT_DAYS && <Chip c="var(--s1)">Recent</Chip>}
               {b.IsStealerLog && <Chip c="var(--s1)">Infostealer</Chip>}
               {b.IsSensitive && <Chip c="var(--s2)">Sensitive</Chip>}
               {!b.IsVerified && <Chip c="var(--s3)">Unverified</Chip>}
@@ -338,11 +347,11 @@ function Compliance({ items }) {
 }
 
 // ─── report export ───────────────────────────────────────────
-function ReportBar({ subject, kind, breaches, tasks, compliance }) {
+function ReportBar({ subject, kind, breaches, tasks, compliance, windowLabel, excluded }) {
   const [open, setOpen] = useState(false);
   const [meta, setMeta] = useState({ client: "", engagement: "", tester: "Bolaji Uthman Edu" });
   const [warn, setWarn] = useState("");
-  const payload = { subject, kind, breaches, tasks, compliance, meta };
+  const payload = { subject, kind, breaches, tasks, compliance, meta: { ...meta, windowLabel, excluded } };
 
   return (
     <div className="panel" style={{ marginBottom: 16 }}>
@@ -381,9 +390,18 @@ function ReportBar({ subject, kind, breaches, tasks, compliance }) {
 }
 
 // ─── results ─────────────────────────────────────────────────
-function Results({ subject, kind, breaches }) {
+function Results({ subject, kind, breaches: all }) {
   const [tab, setTab] = useState("overview");
   const [open, setOpen] = useState(null);
+  const [win, setWin] = useState("all");
+
+  const windowDays = WINDOWS.find(w => w.id === win).days;
+  const breaches = useMemo(
+    () => all.filter(b => daysSince(b.BreachDate) <= windowDays),
+    [all, windowDays]
+  );
+  const hidden = all.length - breaches.length;
+
   const s = useMemo(() => score(breaches), [breaches]);
   const g = grade(s);
   const tasks = useMemo(() => remediation(breaches), [breaches]);
@@ -394,13 +412,46 @@ function Results({ subject, kind, breaches }) {
     return [...m.entries()].sort((a, z) => classSeverity(z[0]) - classSeverity(a[0]) || z[1] - a[1]);
   }, [breaches]);
 
-  if (!breaches.length) return (
+  const WindowPicker = () => (
+    <div className="row" style={{ gap: 7, flexWrap: "wrap", marginBottom: 14, alignItems: "center" }}>
+      <span className="t-xs mute">Findings from:</span>
+      {WINDOWS.map(w => (
+        <button key={w.id} onClick={() => setWin(w.id)} aria-pressed={win === w.id}
+          className="chip" style={{
+            cursor: "pointer",
+            color: win === w.id ? "#B7A4FF" : "var(--dim)",
+            borderColor: win === w.id ? "var(--brand)" : "var(--line-hi)",
+            background: win === w.id ? "var(--brand-soft)" : "transparent",
+          }}>{w.label}</button>
+      ))}
+      {hidden > 0 && (
+        <span className="t-xs mute">
+          {hidden} older finding{hidden === 1 ? "" : "s"} excluded
+        </span>
+      )}
+    </div>
+  );
+
+  if (!all.length) return (
     <div className="panel" style={{ textAlign: "center", padding: "44px 26px", borderColor: "var(--s4)55" }}>
       <h3 className="t-md" style={{ color: "var(--s4)" }}>No breaches found</h3>
       <p className="t-sm dim" style={{ margin: "8px auto 0", maxWidth: 440 }}>
         Nothing recorded for <span className="mono">{subject}</span> in the Have I Been Pwned index.
         That is a good sign, though it only covers breaches that have been publicly catalogued.
       </p>
+    </div>
+  );
+
+  if (!breaches.length) return (
+    <div>
+      <WindowPicker />
+      <div className="panel" style={{ textAlign: "center", padding: "40px 26px" }}>
+        <h3 className="t-md">Nothing in this window</h3>
+        <p className="t-sm dim" style={{ margin: "8px auto 0", maxWidth: 440 }}>
+          All {all.length} finding{all.length === 1 ? "" : "s"} for <span className="mono">{subject}</span> predate
+          this period. Widen the window to see them.
+        </p>
+      </div>
     </div>
   );
 
@@ -411,6 +462,7 @@ function Results({ subject, kind, breaches }) {
 
   return (
     <div>
+      <WindowPicker />
       <div className="panel" style={{ marginBottom: 16, borderColor: tone(g.sev) + "55" }}>
         <div className="row stack-sm" style={{ gap: 22, alignItems: "center" }}>
           <Dial s={s} />
@@ -448,7 +500,8 @@ function Results({ subject, kind, breaches }) {
         </div>
       </div>
 
-      <ReportBar subject={subject} kind={kind} breaches={breaches} tasks={tasks} compliance={comp} />
+      <ReportBar subject={subject} kind={kind} breaches={breaches} tasks={tasks} compliance={comp}
+        windowLabel={WINDOWS.find(w => w.id === win).label} excluded={hidden} />
 
       <div className="tabs" role="tablist">
         {[["overview", "What was exposed"], ["records", `Breaches (${breaches.length})`],
